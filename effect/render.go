@@ -1,4 +1,4 @@
-package loaders
+package effect
 
 import (
 	"bytes"
@@ -27,7 +27,7 @@ func marshalComponents(components []models.Replace) string {
 	return requestBody
 }
 
-// Load connect to the render api
+// Load connect to the render api to render the components
 func Load(components []models.Replace) ([]models.CompoentRendered, error) {
 	resp, err := http.Post(
 		RenderApiHost+"/es_ES/multirender",

@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Oscar170/reverse-proxy/loaders"
+	"github.com/Oscar170/reverse-proxy/effect"
 	"github.com/Oscar170/reverse-proxy/models"
-	"github.com/Oscar170/reverse-proxy/parser"
+	"github.com/Oscar170/reverse-proxy/morphism"
 )
 
 var ServerToHydrate = "http://127.0.0.1:8080"
@@ -41,8 +41,8 @@ func hydrateDocument(html string, toReplace []models.Replace, renderedComponents
 }
 
 func rerender(html string) string {
-	components := parser.ComponentsParser(html)
-	renderedComponents, err := loaders.Load(components)
+	components := morphism.ComponentsParser(html)
+	renderedComponents, err := effect.Load(components)
 
 	if err != nil {
 		panic(err)

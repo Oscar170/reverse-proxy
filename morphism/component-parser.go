@@ -1,4 +1,4 @@
-package parser
+package morphism
 
 import (
 	"regexp"
@@ -6,7 +6,7 @@ import (
 	"github.com/Oscar170/reverse-proxy/models"
 )
 
-// ComponentsParser search in the html for rerender tag
+// ComponentsParser extracts the render tags
 func ComponentsParser(html string) []models.Replace {
 	components := make([]models.Replace, 0)
 	findReg := regexp.MustCompile(`@rerender\(.*\)`)
