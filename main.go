@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/Oscar170/reverse-proxy/models"
+	"github.com/Oscar170/reverse-proxy/parser"
 )
 
 var ServerToHydrate = "http://127.0.0.1:8080"
@@ -101,7 +102,7 @@ func hydrateDocument(html string, toReplace []models.Replace, renderedComponents
 }
 
 func rerender(html string) string {
-	components := findComponentsToRender(html)
+	components := parser.ComponentsParser(html)
 	renderedComponents, err := renderComponents(components)
 
 	if err != nil {
