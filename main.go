@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,34 +10,10 @@ import (
 	"strings"
 
 	"github.com/Oscar170/reverse-proxy/effect"
-	"github.com/Oscar170/reverse-proxy/models"
 	"github.com/Oscar170/reverse-proxy/morphism"
 )
 
 var ServerToHydrate = "http://127.0.0.1:8080"
-
-func hydrateDocument(html string, toReplace []models.Replace, renderedComponents []models.CompoentRendered) string {
-	cssInline := ""
-	intiState := make(map[string]string)
-	for i, replace := range toReplace {
-		component := renderedComponents[i]
-		html = strings.Replace(html, replace.Tag, component.Html, 1)
-		cssInline = cssInline + component.Css
-		intiState[replace.Name] = string(component.InitState)
-	}
-
-	bInitState, _ := json.Marshal(intiState)
-
-	html = strings.Replace(html, "<!––css_inline_hook––>", cssInline, 1)
-	html = strings.Replace(
-		html,
-		"<!––init_state_hook––>",
-		fmt.Sprintf(`<script type="application/json" id="INIT_STATE">%s</script>`, string(bInitState)),
-		1,
-	)
-
-	return html
-}
 
 func rerender(html string) string {
 	components := morphism.ComponentsParser(html)
@@ -48,7 +23,7 @@ func rerender(html string) string {
 		panic(err)
 	}
 
-	return hydrateDocument(html, components, renderedComponents)
+	return morphism.Hydrate(html, components, renderedComponents)
 }
 
 func handleRequestAndRedirect(proxy *httputil.ReverseProxy) func(res http.ResponseWriter, req *http.Request) {
