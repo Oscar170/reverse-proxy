@@ -4,7 +4,7 @@
         <!––css_inline_hook––>
     </head>
     <body>
-        <div class="root-header">@rerender("Header", {"country":"es", "product":"VUE", "column":false})</div>
+        <div class="root-header">@rerender({ "component":"Header", "props": { "country": "es", "product": "VUE", "column": false }})</div>
         <!––init_state_hook––>
         <!––js_cdn_hook––>
     </body>

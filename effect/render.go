@@ -3,7 +3,6 @@ package effect
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -12,27 +11,14 @@ import (
 
 var RenderApiHost = "http://localhost:3000"
 
-func marshalComponents(components []models.Replace) string {
-	requestBody := "["
-	lastIndex := len(components) - 1
-	for i, c := range components {
-		requestBody = fmt.Sprintf(`%s{"component":"%s","props":%s}`, requestBody, c.Component.Name, c.Component.Props)
-		if lastIndex != i {
-			requestBody = requestBody + ","
-		}
-	}
-
-	requestBody = requestBody + "]"
-
-	return requestBody
-}
-
 // Load connect to the render api to render the components
 func Load(components []models.Replace) ([]models.CompoentRendered, error) {
+	requestBody, _ := json.Marshal(components)
+
 	resp, err := http.Post(
 		RenderApiHost+"/es_ES/multirender",
 		"application/json",
-		bytes.NewBuffer([]byte(marshalComponents(components))),
+		bytes.NewBuffer(requestBody),
 	)
 
 	if err != nil {
