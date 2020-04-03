@@ -11,29 +11,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Oscar170/reverse-proxy/models"
 )
 
-var ServerToHydrate = "http://127.0.0.1:8081"
+var ServerToHydrate = "http://127.0.0.1:8080"
 var RenderApiHost = "http://localhost:3000"
 
-type CompoentRendered struct {
-	Html      string          `json:"html"`
-	Css       string          `json:"css"`
-	InitState json.RawMessage `json:"initState"`
-}
-
-type Component struct {
-	Name  string `json:"component"`
-	Props string `json:"props"`
-}
-
-type Replace struct {
-	Tag string
-	Component
-}
-
-func findComponentsToRender(html string) []Replace {
-	components := make([]Replace, 0)
+func findComponentsToRender(html string) []models.Replace {
+	components := make([]models.Replace, 0)
 	findReg := regexp.MustCompile(`@rerender\(.*\)`)
 	valuesReg := regexp.MustCompile(`\"([a-zA-z]*)\"\, (\{.*\})`)
 
@@ -42,9 +28,9 @@ func findComponentsToRender(html string) []Replace {
 	for _, tag := range matches {
 		values := valuesReg.FindStringSubmatch(tag)
 
-		components = append(components, Replace{
+		components = append(components, models.Replace{
 			Tag: tag,
-			Component: Component{
+			Component: models.Component{
 				Name:  values[1],
 				Props: values[2],
 			}})
@@ -53,7 +39,7 @@ func findComponentsToRender(html string) []Replace {
 	return components
 }
 
-func marshalComponents(components []Replace) string {
+func marshalComponents(components []models.Replace) string {
 	requestBody := "["
 	lastIndex := len(components) - 1
 	for i, c := range components {
@@ -68,7 +54,7 @@ func marshalComponents(components []Replace) string {
 	return requestBody
 }
 
-func renderComponents(components []Replace) ([]CompoentRendered, error) {
+func renderComponents(components []models.Replace) ([]models.CompoentRendered, error) {
 	resp, err := http.Post(
 		RenderApiHost+"/es_ES/multirender",
 		"application/json",
@@ -85,13 +71,13 @@ func renderComponents(components []Replace) ([]CompoentRendered, error) {
 		return nil, err
 	}
 
-	rendered := make([]CompoentRendered, 0)
+	rendered := make([]models.CompoentRendered, 0)
 	err = json.Unmarshal(body, &rendered)
 
 	return rendered, nil
 }
 
-func hydrateDocument(html string, toReplace []Replace, renderedComponents []CompoentRendered) string {
+func hydrateDocument(html string, toReplace []models.Replace, renderedComponents []models.CompoentRendered) string {
 	cssInline := ""
 	intiState := make(map[string]string)
 	for i, replace := range toReplace {
