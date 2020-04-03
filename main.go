@@ -1,82 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/Oscar170/reverse-proxy/loaders"
 	"github.com/Oscar170/reverse-proxy/models"
 	"github.com/Oscar170/reverse-proxy/parser"
 )
 
 var ServerToHydrate = "http://127.0.0.1:8080"
-var RenderApiHost = "http://localhost:3000"
-
-func findComponentsToRender(html string) []models.Replace {
-	components := make([]models.Replace, 0)
-	findReg := regexp.MustCompile(`@rerender\(.*\)`)
-	valuesReg := regexp.MustCompile(`\"([a-zA-z]*)\"\, (\{.*\})`)
-
-	matches := findReg.FindAllString(html, -1)
-
-	for _, tag := range matches {
-		values := valuesReg.FindStringSubmatch(tag)
-
-		components = append(components, models.Replace{
-			Tag: tag,
-			Component: models.Component{
-				Name:  values[1],
-				Props: values[2],
-			}})
-	}
-
-	return components
-}
-
-func marshalComponents(components []models.Replace) string {
-	requestBody := "["
-	lastIndex := len(components) - 1
-	for i, c := range components {
-		requestBody = fmt.Sprintf(`%s{"component":"%s","props":%s}`, requestBody, c.Component.Name, c.Component.Props)
-		if lastIndex != i {
-			requestBody = requestBody + ","
-		}
-	}
-
-	requestBody = requestBody + "]"
-
-	return requestBody
-}
-
-func renderComponents(components []models.Replace) ([]models.CompoentRendered, error) {
-	resp, err := http.Post(
-		RenderApiHost+"/es_ES/multirender",
-		"application/json",
-		bytes.NewBuffer([]byte(marshalComponents(components))),
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	rendered := make([]models.CompoentRendered, 0)
-	err = json.Unmarshal(body, &rendered)
-
-	return rendered, nil
-}
 
 func hydrateDocument(html string, toReplace []models.Replace, renderedComponents []models.CompoentRendered) string {
 	cssInline := ""
@@ -103,7 +42,7 @@ func hydrateDocument(html string, toReplace []models.Replace, renderedComponents
 
 func rerender(html string) string {
 	components := parser.ComponentsParser(html)
-	renderedComponents, err := renderComponents(components)
+	renderedComponents, err := loaders.Load(components)
 
 	if err != nil {
 		panic(err)
